@@ -27,7 +27,6 @@ def run_agent(question, provider, tools, max_steps=6):
     has_truncated_update = False
     source_revision_requested = False
 
-    # Theo dõi incident đã được truy vấn và incident cần điều tra tiếp.
     queried_incidents = set()
     pending_incidents = set()
 
@@ -79,7 +78,6 @@ def run_agent(question, provider, tools, max_steps=6):
                         'message': str(exc)[:200],
                     }
 
-            # Ghi nhận incident mà agent đã yêu cầu truy vấn.
             if (
                 call['name'] == 'get_incident_details'
                 and isinstance(arguments, dict)
@@ -93,7 +91,6 @@ def run_agent(question, provider, tools, max_steps=6):
                         str(requested_id),
                     ))
 
-            # Xử lý kết quả lấy chi tiết incident.
             if (
                 call['name'] == 'get_incident_details'
                 and isinstance(result, dict)
@@ -104,14 +101,12 @@ def run_agent(question, provider, tools, max_steps=6):
 
                 updates = result.get('updates') or []
 
-                # Theo dõi các update bị cắt.
                 has_truncated_update = has_truncated_update or any(
                     isinstance(update, dict)
                     and update.get('truncated') is True
                     for update in updates
                 )
 
-                # Phát hiện URL của các incident liên quan.
                 for update in updates:
                     if not isinstance(update, dict):
                         continue
@@ -132,7 +127,6 @@ def run_agent(question, provider, tools, max_steps=6):
 
                         incident_key = (related_provider, related_id)
 
-                        # Chỉ thêm incident chưa được truy vấn.
                         if incident_key not in queried_incidents:
                             pending_incidents.add(incident_key)
 
@@ -190,7 +184,6 @@ def run_agent(question, provider, tools, max_steps=6):
                     })
                     continue
 
-                # Kiểm tra nguồn và giới hạn dữ liệu.
                 missing_urls = observed_urls.difference(
                     {url for url in observed_urls if url in answer}
                 )
