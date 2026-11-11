@@ -40,6 +40,15 @@ class EvidenceGateTests(unittest.TestCase):
     def test_failed_tool_does_not_require_source(self):
         fake = FakeProvider([tool_call('1', 'get_incident_details', '{"provider":"github","incident_id":"missing"}'), final('Không tìm được incident')])
         self.assertEqual(run_agent('x', fake, StatusTools())['status'], 'completed')
+    def test_truncated_update_requires_notice(self):
+        fake = FakeProvider([
+            tool_call('1', 'get_incident_details', '{"provider":"github","incident_id":"xr3myzj7ms51"}'),
+            final('Incident đã resolved. https://stspg.io/pjgptg3cfc6n'),
+            final('Update tổng kết bị cắt nên có thể còn chi tiết chưa được cung cấp. https://stspg.io/pjgptg3cfc6n'),
+        ])
+        result = run_agent('Kiểm tra', fake, StatusTools(), max_steps=4)
+        self.assertEqual(result['status'], 'completed')
+        self.assertIn('validation_missing_truncation_notice', [x['event'] for x in result['trace']])
 
 if __name__ == '__main__':
     unittest.main()
